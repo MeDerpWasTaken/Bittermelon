@@ -107,12 +107,12 @@ public class SweepArea extends ExtendedBehaviour<PathfinderMob> {
         }
 
         candidates.sort(Comparator.comparingDouble(Candidate::score).reversed());
-        System.out.println("Checking " + candidates.size() + " candidates");
+        // System.out.println("Checking " + candidates.size() + " candidates");
 
         for (int i = 0; i < Math.min(MAX_CANDIDATES, candidates.size()); i++) {
             Path path = entity.getNavigation().createPath(candidates.get(i).pos(), 0);
             if (path != null && path.canReach()) {
-                System.out.println("Found path on attempt: " + i);
+                // System.out.println("Found path on attempt: " + i);
                 return path;
             }
         }

@@ -184,7 +184,7 @@ public class SCP939 extends BitterMob<SCP939> {
                         .whenStopping(entity -> setDisturbanceLocationIfNone(entity, entity.blockPosition(), 100))
                         .runFor(300, 600),
                 new AttemptLure()
-                        .cooldownFor(100)
+                        .cooldownFor(20)
         );
     }
 

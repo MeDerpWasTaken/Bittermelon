@@ -48,26 +48,30 @@ public class LureSystem {
 
     public LureScene createScene(Entity entity, LureType type) {
         RandomSource random = entity.getRandom();
-        List<LurePool> poolList = pools.get(type);
+        List<LurePool> poolList = pools.getOrDefault(type, pools.get(LureType.GENERIC));
         LurePool pool = poolList.get(random.nextInt(poolList.size()));
         List<LureDialogue> lines = new ArrayList<>();
+
         for (int i = 0; i < pool.dialogue().length; i++) {
             LureDialogue dialogue;
             List<String> messages = new ArrayList<>(Arrays.asList(pool.dialogue()[i]));
             if (characters.isEmpty()) {
                 dialogue = getFallbackDialogue(random, messages);
             } else {
-                UUID uuid = characters.get(random.nextInt(characters.size()));
-                Character character = CharacterUtil.getCharacter(entity.level(), uuid);
-                if (character == null) {
-                    dialogue = getFallbackDialogue(random, messages);
-                } else {
-                    dialogue = new LureDialogue(character.getName(), character.getEmoteColor(), messages);
-                }
+                dialogue = getDialogueForCharacter(random, messages);
             }
             lines.add(dialogue);
         }
         return new LureScene(type, lines, pool);
+    }
+
+    private LureDialogue getDialogueForCharacter(RandomSource random, List<String> messages) {
+        UUID uuid = characters.get(random.nextInt(characters.size()));
+        Character character = CharacterUtil.getCharacter(null, uuid);
+        if (character == null) {
+            return getFallbackDialogue(random, messages);
+        }
+        return new LureDialogue(character.getName(), character.getEmoteColor(), messages);
     }
 
     private LureDialogue getFallbackDialogue(RandomSource random, List<String> messages) {
@@ -77,11 +81,11 @@ public class LureSystem {
 
     public void attemptLure(Entity entity, LureType type) {
         if (activeScene == null || activeScene.type() != type) {
-            activeScene = createScene(entity, LureType.GENERIC);
+            activeScene = createScene(entity, type);
+            if (activeScene == null) return;
         }
 
         Level level = entity.level();
-        assert activeScene != null;
         LurePool pool = activeScene.pool();
         if (level.getGameTime() - lastLure < interval) return;
 
@@ -93,7 +97,7 @@ public class LureSystem {
         }
 
         lastLure = level.getGameTime();
-        interval = pool.interval() + random.nextInt(pool.additionalRandomInterval());
+        interval = pool.interval() + random.nextInt(Math.max(1, pool.additionalRandomInterval()));
     }
 
     private static void playRandomSound(Entity entity, RandomSource random, LurePool pool) {
@@ -103,7 +107,7 @@ public class LureSystem {
     }
 
     private void makeRandomLure(Entity entity, RandomSource random) {
-        assert activeScene != null;
+        if (activeScene == null) return;
         int i = random.nextInt(activeScene.lines().size());
         LureDialogue dialogue = activeScene.lines().get(i);
         String message = dialogue.messages().remove(random.nextInt(dialogue.messages().size()));
@@ -131,13 +135,31 @@ public class LureSystem {
         pools.put(LureType.GENERIC, List.of(
                 new LurePool(
                         new String[][]{
-                                {"Hello there!", "How are you doing?", "Nice to meet you!"},
-                                {"I hope you're having a good day.", "Stay safe out there!", "Take care!"}
+                                {"Holy fuck?!", "WHAT IS THAT?!!", "Be careful!!"},
+                                {"I heard something behind us!", "WAIT!", "It's coming from over there!"}
                         },
                         new SoundEvent[]{
                         },
                         100,
                         50
+                ),
+                new LurePool(
+                        new String[][]{
+                                {"Is anyone out there?", "Hello?", "I hear that."}
+                        },
+                        new SoundEvent[]{
+                        },
+                        100,
+                        50
+                ),
+                new LurePool(
+                        new String[][]{
+                                {"I'm entering a new section.", "Goddamn, it's dark here.", "I don't like that sound.", "Yeah.", "No.", "What's the status?", "Copy that."}
+                        },
+                        new SoundEvent[]{
+                        },
+                        200,
+                        200
                 )
         ));
     }

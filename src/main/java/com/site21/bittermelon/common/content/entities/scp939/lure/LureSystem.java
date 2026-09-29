@@ -21,7 +21,10 @@ public class LureSystem {
             instance -> instance.group(
                     Codec.list(UUIDUtil.CODEC)
                             .fieldOf("characters")
-                            .forGetter(LureSystem::getCharacters)
+                            .forGetter(LureSystem::getCharacters),
+                    Codec.LONG
+                            .fieldOf("lastScene")
+                            .forGetter(LureSystem::getLastScene)
             ).apply(instance, LureSystem::new)
     );
 
@@ -32,14 +35,19 @@ public class LureSystem {
             new FakeCharacter("Tim", 0xFFFF00)
     );
 
+    private static final float SOUND_CHANCE = 0.1f;
+    private static final int COOLDOWN_TICKS = 4000;
+
     private static final Map<LureType, List<LurePool>> pools;
-    private List<UUID> characters;
+    private final List<UUID> characters;
     private @Nullable LureScene activeScene;
     private long lastLure = 0;
     private int interval = 0;
+    private long lastScene = 0;
 
-    public LureSystem(List<UUID> characters) {
-        this.characters = characters;
+    public LureSystem(List<UUID> characters, long lastScene) {
+        this.characters = new ArrayList<>(characters);
+        this.lastScene = lastScene;
     }
 
     public LureSystem() {
@@ -90,7 +98,7 @@ public class LureSystem {
         if (level.getGameTime() - lastLure < interval) return;
 
         RandomSource random = entity.getRandom();
-        if (random.nextFloat() < 0.1 && pool.sounds().length > 0) {
+        if (random.nextFloat() < SOUND_CHANCE && pool.sounds().length > 0) {
             playRandomSound(entity, random, pool);
         } else {
             makeRandomLure(entity, random);
@@ -121,13 +129,24 @@ public class LureSystem {
             activeScene.lines().remove(i);
         }
 
-        if (activeScene.lines().isEmpty()) {
+        activeScene.incrementBeat();
+
+        if (activeScene.isFinished()) {
             activeScene = null;
+            lastScene = entity.level().getGameTime();
         }
+    }
+
+    public long getLastScene() {
+        return lastScene;
     }
 
     public List<UUID> getCharacters() {
         return characters;
+    }
+
+    public boolean isOnCooldown(Level level) {
+        return level.getGameTime() - lastScene < COOLDOWN_TICKS;
     }
 
     static {
@@ -141,16 +160,18 @@ public class LureSystem {
                         new SoundEvent[]{
                         },
                         100,
-                        50
+                        50,
+                        6
                 ),
                 new LurePool(
                         new String[][]{
-                                {"Is anyone out there?", "Hello?", "I hear that."}
+                                {"Is anyone out there?", "Hello?", "I heard that."}
                         },
                         new SoundEvent[]{
                         },
                         100,
-                        50
+                        50,
+                        3
                 ),
                 new LurePool(
                         new String[][]{
@@ -159,7 +180,8 @@ public class LureSystem {
                         new SoundEvent[]{
                         },
                         200,
-                        200
+                        200,
+                        5
                 )
         ));
     }

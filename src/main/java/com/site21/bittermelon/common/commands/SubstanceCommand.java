@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.site21.bittermelon.common.content.blocks.substance.fluid.FluidBlockEntity;
+import com.site21.bittermelon.common.content.blocks.fluid.FluidBlockEntity;
 import com.site21.bittermelon.common.content.items.substance.SubstanceContainerItem;
 import com.site21.bittermelon.common.systems.atmosphere.AtmosHandler;
 import com.site21.bittermelon.common.systems.atmosphere.AtmosInstance;

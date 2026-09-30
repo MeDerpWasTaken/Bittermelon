@@ -1,4 +1,4 @@
-package com.site21.bittermelon.common.content.blocks.substance.fluid;
+package com.site21.bittermelon.common.content.blocks.fluid;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.BlockPos;

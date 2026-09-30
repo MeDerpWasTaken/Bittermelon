@@ -33,6 +33,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -114,6 +115,7 @@ public class BitterModelProvider extends ModelProvider {
         blockModels.createTrivialCube(BitterBlocks.CAGE.get());
         createEyeballBlister(blockModels, BitterBlocks.EYEBALL_BLISTER.get());
         createWoodenSeat(blockModels, BitterBlocks.BLACK_WOODEN_SEAT.get(), "black");
+        createDrum(blockModels, BitterBlocks.METAL_DRUM.get());
 
         // SubstanceFluid Containers
         itemModels.generateFlatItem(BEER_BOTTLE.get(), ModelTemplates.FLAT_ITEM);
@@ -847,6 +849,43 @@ public class BitterModelProvider extends ModelProvider {
                                         .term(BlockStateProperties.EAST, false),
                                 legSE
                         )
+        );
+
+        blockModels.registerSimpleItemModel(block, ModelLocationUtils.getModelLocation(block));
+    }
+
+    public void createDrum(@NotNull BlockModelGenerators blockModels, Block block) {
+        Material side = getBlockTexture(block, "_side");
+        Material bottom = getBlockTexture(block, "_bottom");
+
+        TextureMapping closedMapping = new TextureMapping()
+                .put(TextureSlot.TOP, getBlockTexture(block, "_top"))
+                .put(TextureSlot.SIDE, side)
+                .put(TextureSlot.BOTTOM, bottom);
+        TextureMapping openMapping = new TextureMapping()
+                .put(TextureSlot.TOP, getBlockTexture(block, "_top_open"))
+                .put(TextureSlot.SIDE, side)
+                .put(TextureSlot.BOTTOM, bottom);
+
+        MultiVariant closed = plainVariant(
+                ModelTemplates.CUBE_BOTTOM_TOP.create(block, closedMapping, blockModels.modelOutput));
+        MultiVariant open = plainVariant(
+                ModelTemplates.CUBE_BOTTOM_TOP.createWithSuffix(block, "_open", openMapping, blockModels.modelOutput));
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(block)
+                        .with(PropertyDispatch.initial(BarrelBlock.FACING, BarrelBlock.OPEN)
+                                .generate((facing, isOpen) -> {
+                                    MultiVariant base = isOpen ? open : closed;
+                                    return switch (facing) {
+                                        case DOWN -> base.with(X_ROT_180);
+                                        case NORTH -> base.with(X_ROT_90);
+                                        case EAST -> base.with(X_ROT_90).with(Y_ROT_90);
+                                        case SOUTH -> base.with(X_ROT_90).with(Y_ROT_180);
+                                        case WEST -> base.with(X_ROT_90).with(Y_ROT_270);
+                                        default -> base;
+                                    };
+                                }))
         );
 
         blockModels.registerSimpleItemModel(block, ModelLocationUtils.getModelLocation(block));

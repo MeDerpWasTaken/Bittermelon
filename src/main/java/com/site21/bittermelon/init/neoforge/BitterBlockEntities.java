@@ -1,6 +1,7 @@
 package com.site21.bittermelon.init.neoforge;
 
 import com.site21.bittermelon.Bittermelon;
+import com.site21.bittermelon.common.content.blocks.barrel.DrumBlockEntity;
 import com.site21.bittermelon.common.content.blocks.burrow.BurrowBlockEntity;
 import com.site21.bittermelon.common.content.blocks.container.smallbox.BoxBlockEntity;
 import com.site21.bittermelon.common.content.blocks.electronics.containmentalarm.ContainmentAlarmBlockEntity;
@@ -131,4 +132,8 @@ public class BitterBlockEntities {
     public static final Supplier<BlockEntityType<BurrowBlockEntity>> BURROW_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
             "burrow_block_entity",
             () -> new BlockEntityType<>(BurrowBlockEntity::new, false, BURROW.get()));
-}
+
+    public static final Supplier<BlockEntityType<DrumBlockEntity>> DRUM_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register(
+            "drum_block_entity",
+            () -> new BlockEntityType<>(DrumBlockEntity::new, false, METAL_DRUM.get()));
+    }

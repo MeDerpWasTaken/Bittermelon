@@ -66,6 +66,7 @@ import static com.site21.bittermelon.init.custom.Anatomies.HUMAN;
 import static com.site21.bittermelon.init.neoforge.BitterAttachmentTypes.*;
 import static com.site21.bittermelon.init.neoforge.BitterFluids.SUBSTANCE_FLUID;
 import static com.site21.bittermelon.init.neoforge.BitterMobEffects.DROWNING;
+import static com.site21.bittermelon.util.SubstanceUtil.spill;
 
 @EventBusSubscriber(modid = Bittermelon.MOD_ID)
 public class CommonEvents {
@@ -152,28 +153,13 @@ public class CommonEvents {
 
             if (stains.getVolume() > 10 && level.getRandom().nextFloat() > 0.1f) {
                 List<SubstanceStack> drippedSubstances = stains.spreadSubstancesByVolume(10);
-                if (drip(level, pos, drippedSubstances)) {
+                if (spill(level, pos, drippedSubstances)) {
                     stains.removeSubstances(drippedSubstances);
                     level.playSound(null, pos, SoundEvents.POINTED_DRIPSTONE_DRIP_WATER,
                             SoundSource.AMBIENT, 1.0f, 0.8f + level.getRandom().nextFloat() * 0.4f);
                 }
             }
         }
-    }
-
-    public static boolean drip(@NotNull Level level, BlockPos pos, List<SubstanceStack> substances) {
-        SubstanceFluid fluid = SUBSTANCE_FLUID.get();
-
-        if (level.getBlockState(pos).canBeReplaced() && level.getFluidState(pos).isEmpty()) {
-            level.setBlock(pos, fluid.defaultFluidState().createLegacyBlock(), Block.UPDATE_ALL);
-        }
-
-        if (level.getBlockEntity(pos) instanceof SubstanceFluidBlockEntity spreadBE) {
-            spreadBE.transferSubstances(substances);
-            return true;
-        }
-
-        return false;
     }
 
     @SubscribeEvent

@@ -1,7 +1,7 @@
 package com.site21.bittermelon.common.content.items.mop;
 
-import com.site21.bittermelon.common.content.blocks.substance.fluid.FluidBlock;
-import com.site21.bittermelon.common.content.blocks.substance.fluid.FluidBlockEntity;
+import com.site21.bittermelon.common.content.blocks.fluid.FluidBlock;
+import com.site21.bittermelon.common.content.blocks.fluid.FluidBlockEntity;
 import com.site21.bittermelon.common.content.items.substance.FluidContainerItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;

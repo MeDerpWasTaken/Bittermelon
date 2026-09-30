@@ -23,7 +23,7 @@ import static com.site21.bittermelon.init.neoforge.BitterFluids.SUBSTANCE_FLUID;
 import static net.minecraft.world.level.block.Block.UPDATE_ALL;
 import static net.minecraft.world.level.block.Block.UPDATE_CLIENTS;
 
-public class SubstanceFluidBlockEntity extends BlockEntity {
+public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwner {
     private SubstanceMixture mixture;
     private final Runnable mixtureChangedCallback = () -> {
         setChanged();
@@ -197,5 +197,10 @@ public class SubstanceFluidBlockEntity extends BlockEntity {
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), UPDATE_CLIENTS);
         }
+    }
+
+    @Override
+    public SubstanceMixture getMixture() {
+        return mixture;
     }
 }

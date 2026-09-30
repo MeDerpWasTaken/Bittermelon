@@ -1,6 +1,7 @@
 package com.site21.bittermelon.common.content.items.substance;
 
 import com.site21.bittermelon.common.systems.component.SubstanceContents;
+import com.site21.bittermelon.common.systems.fluid.substance.MixtureOwner;
 import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluidBlock;
 import com.site21.bittermelon.common.systems.substance.SubstanceContainer;
 import com.site21.bittermelon.common.systems.substance.SubstanceStack;
@@ -141,6 +142,8 @@ public class FluidContainerItem extends SubstanceContainerItem {
                level.setBlock(clickedOnPos, SUBSTANCE_FLUID.get().defaultBlockState(), UPDATE_ALL_IMMEDIATE);
            }
             transferSubstancesToBlock(clickedOnPos, level, stack, getLimitedTransferRate(stack));
+        } else if (level.getBlockEntity(clickedOnPos) instanceof MixtureOwner) {
+            transferSubstancesToBlock(clickedOnPos, level, stack, getLimitedTransferRate(stack));
         } else if (existingState.canBeReplaced()) {
             level.setBlock(spillPos, SUBSTANCE_FLUID.get().defaultBlockState(), UPDATE_ALL_IMMEDIATE);
             transferSubstancesToBlock(spillPos, level, stack, getLimitedTransferRate(stack));
@@ -153,19 +156,19 @@ public class FluidContainerItem extends SubstanceContainerItem {
     }
 
     protected void transferSubstancesToBlock(BlockPos pos, @NotNull Level level, ItemStack stack, int volume) {
-        if (level.getBlockEntity(pos) instanceof SubstanceContainer fluidBE) {
+        if (level.getBlockEntity(pos) instanceof MixtureOwner container) {
             transferSubstances(stack, getTotalVolume(stack), volume,
-                    (substance, amount) -> fluidBE.updateSubstance(substance));
+                    (substance, amount) -> container.getMixture().updateSubstance(substance));
             playEmptySound(level, pos);
         }
     }
 
     protected void transferSubstancesFromBlock(BlockPos pos, @NotNull Level level, ItemStack stack) {
-        if (level.getBlockEntity(pos) instanceof SubstanceContainer fluidBE) {
+        if (level.getBlockEntity(pos) instanceof MixtureOwner container) {
             int availableCapacity = getCapacity(stack) - getTotalVolume(stack);
             int transferRate = Math.min(getTransferRate(stack), availableCapacity);
 
-            List<SubstanceStack> transferredSubstances = fluidBE.transferSubstancesByVolume(transferRate);
+            List<SubstanceStack> transferredSubstances = container.getMixture().transferSubstancesByVolume(transferRate);
             SubstanceContents.Mutable mutableData = getMutableSubstanceData(stack);
 
             for (SubstanceStack substance : transferredSubstances) {

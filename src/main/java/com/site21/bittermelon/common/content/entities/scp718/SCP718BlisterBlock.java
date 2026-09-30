@@ -29,6 +29,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import java.util.List;
 
 import static com.site21.bittermelon.init.neoforge.BitterEntities.SCP_718;
+import static com.site21.bittermelon.util.SubstanceUtil.spill;
 
 public class SCP718BlisterBlock extends Block {
     public static final IntegerProperty AGE = IntegerProperty.create("age", 0, 13);
@@ -91,7 +92,7 @@ public class SCP718BlisterBlock extends Block {
 
         level.removeBlock(pos, false);
         List<SubstanceStack> substances = List.of(new SubstanceStack(Substances.EYEBALL_FLUID, 50));
-        CommonEvents.drip(level, pos, substances);
+        spill(level, pos, substances);
 
         if (level instanceof ServerLevel serverLevel) {
             makeSoundAndParticles(serverLevel, pos, state);

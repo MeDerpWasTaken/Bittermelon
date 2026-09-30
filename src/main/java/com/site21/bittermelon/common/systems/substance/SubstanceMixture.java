@@ -282,6 +282,9 @@ public class SubstanceMixture implements SubstanceContainer {
     }
 
     public List<SubstanceStack> spreadSubstancesByPercentage(float percentage) {
+        if (getVolume() <= 0) {
+            return Collections.emptyList();
+        }
         return spreadSubstancesByVolume((int) (getVolume() * percentage));
     }
 

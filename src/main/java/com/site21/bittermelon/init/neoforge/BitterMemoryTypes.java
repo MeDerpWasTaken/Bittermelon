@@ -2,7 +2,7 @@ package com.site21.bittermelon.init.neoforge;
 
 import com.mojang.serialization.Codec;
 import com.site21.bittermelon.Bittermelon;
-import com.site21.bittermelon.common.content.blocks.substance.fluid.FluidBlockEntity;
+import com.site21.bittermelon.common.content.blocks.fluid.FluidBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.LivingEntity;

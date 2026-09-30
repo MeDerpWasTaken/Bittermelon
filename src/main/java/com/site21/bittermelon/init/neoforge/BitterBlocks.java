@@ -2,6 +2,7 @@ package com.site21.bittermelon.init.neoforge;
 
 import com.site21.bittermelon.Bittermelon;
 import com.site21.bittermelon.common.content.blocks.SeatBlock;
+import com.site21.bittermelon.common.content.blocks.barrel.DrumBlock;
 import com.site21.bittermelon.common.content.blocks.burrow.BurrowBlock;
 import com.site21.bittermelon.common.content.blocks.container.smallbox.SmallBox;
 import com.site21.bittermelon.common.content.blocks.dirtyfloor.DirtyFloorBlock;
@@ -37,6 +38,7 @@ import com.site21.bittermelon.common.content.entities.scp718.SCP718BlisterBlock;
 import com.site21.bittermelon.common.systems.fluid.simple.SimpleFluidBlock;
 import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluidBlock;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -51,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.ToIntFunction;
 
+import static net.minecraft.world.level.block.SoundType.ANVIL;
 import static net.minecraft.world.level.block.SoundType.METAL;
 
 public class BitterBlocks {
@@ -386,6 +389,14 @@ public class BitterBlocks {
             properties -> new SeatBlock(properties
                     .destroyTime(1.5f)
                     .sound(SoundType.WOOD)
+            )
+    );
+
+    public static final DeferredBlock<DrumBlock> METAL_DRUM = BLOCKS.registerBlock(
+            "metal_drum",
+            properties -> new DrumBlock(properties
+                    .destroyTime(2.5f)
+                    .sound(ANVIL)
             )
     );
 }

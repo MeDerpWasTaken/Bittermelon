@@ -23,6 +23,7 @@ import java.util.List;
 
 import static com.site21.bittermelon.init.neoforge.BitterAttachmentTypes.STAINS;
 import static com.site21.bittermelon.init.neoforge.BitterEntities.FLUID_PROJECTILE;
+import static com.site21.bittermelon.util.SubstanceUtil.spill;
 import static net.neoforged.neoforge.event.EventHooks.onProjectileImpact;
 
 public class FluidProjectile extends Projectile {
@@ -75,7 +76,7 @@ public class FluidProjectile extends Projectile {
         super.onHitBlock(result);
         if (level().isClientSide()) return;
 
-        CommonEvents.drip(level(), result.getBlockPos().above(), mixture.getSubstances());
+        spill(level(), result.getBlockPos().above(), mixture.getSubstances());
         playSplashSound();
         discard();
     }
@@ -90,7 +91,7 @@ public class FluidProjectile extends Projectile {
             List<SubstanceStack> substances = mixture.spreadSubstancesByPercentage(0.5f);
 
             stains.transferSubstances(substances);
-            CommonEvents.drip(level(), target.blockPosition(), substances);
+            spill(level(), target.blockPosition(), substances);
 
             playSplashSound();
             discard();

@@ -8,6 +8,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
@@ -23,14 +25,13 @@ import static net.minecraft.world.level.block.Block.UPDATE_CLIENTS;
 
 public class SubstanceFluidBlockEntity extends BlockEntity {
     private SubstanceMixture mixture;
+    private final Runnable mixtureChangedCallback = () -> {
+        setChanged();
+        updateFluidState();
+    };
 
     public SubstanceFluidBlockEntity(BlockPos pos, BlockState blockState) {
         super(SUBSTANCE_FLUID_BLOCK_ENTITY.get(), pos, blockState);
-
-        Runnable mixtureChangedCallback = () -> {
-            setChanged();
-            updateFluidState();
-        };
         mixture = new SubstanceMixture(mixtureChangedCallback);
         mixture.setTemperature(500);
     }
@@ -166,8 +167,18 @@ public class SubstanceFluidBlockEntity extends BlockEntity {
     @Override
     protected void loadAdditional(@NotNull ValueInput input) {
         super.loadAdditional(input);
+        input.read("mixture", SubstanceMixture.CODEC).ifPresent(loaded -> {
+            int oldColor = this.mixture.getColor();
+            loaded.setChangedCallback(mixtureChangedCallback);
+            this.mixture = loaded;
+            int newColor = loaded.getColor();
 
-        input.read("mixture", SubstanceMixture.CODEC).ifPresent(mixture -> this.mixture = mixture);
+            if (level != null && level.isClientSide()) {
+                if (oldColor != newColor) {
+                    level.sendBlockUpdated(worldPosition, Blocks.AIR.defaultBlockState(), getBlockState(), Block.UPDATE_IMMEDIATE);
+                }
+            }
+        });
     }
 
     @Override

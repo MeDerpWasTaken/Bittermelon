@@ -47,6 +47,10 @@ public class SubstanceMixture implements SubstanceContainer {
         this(new ArrayList<>(), 273.15f);
     }
 
+    public void setChangedCallback(Runnable callback) {
+        this.onChanged = callback;
+    }
+
     public void markReactionsDirty() {
         reactionsDirty = true;
     }

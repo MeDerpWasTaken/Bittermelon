@@ -208,4 +208,16 @@ public class BitterModelTemplates {
             Optional.of("_leg_sw"),
             FRAME
     );
+
+    public static final ModelTemplate DRUM = new ModelTemplate(
+            Optional.of(Identifier.fromNamespaceAndPath(Bittermelon.MOD_ID, "block/drum")),
+            Optional.empty(),
+            TextureSlot.TEXTURE
+    );
+
+    public static final ModelTemplate DRUM_OPEN = new ModelTemplate(
+            Optional.of(Identifier.fromNamespaceAndPath(Bittermelon.MOD_ID, "block/drum_open")),
+            Optional.of("_open"),
+            TextureSlot.TEXTURE
+    );
 }

@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -44,7 +45,8 @@ import java.util.List;
 public class DrumBlock extends Block implements Fallable, EntityBlock {
     private static final double INSET = 0.001;
     private static final VoxelShape COLLISION = Shapes.box(INSET, 0, INSET, 1 - INSET, 1, 1 - INSET);
-
+    private static final VoxelShape CLOSED_SHAPE = closedShape();
+    private static final VoxelShape OPEN_SHAPE = openShape();
     private static final int TICK_DELAY = 2;
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
@@ -203,5 +205,33 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return COLLISION;
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return state.getValue(OPEN) ? OPEN_SHAPE : CLOSED_SHAPE;
+    }
+
+    private static VoxelShape closedShape(){
+        VoxelShape shape = Shapes.empty();
+        shape = Shapes.join(shape, Shapes.box(0.125, 0, 0.125, 0.875, 0.0625, 0.875), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.125, 0.9375, 0.125, 0.875, 1, 0.875), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0, 1, 1, 0.125), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0.875, 1, 1, 1), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.875, 0, 0.125, 1, 1, 0.875), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0.125, 0.125, 1, 0.875), BooleanOp.OR);
+
+        return shape;
+    }
+
+    private static VoxelShape openShape(){
+        VoxelShape shape = Shapes.empty();
+        shape = Shapes.join(shape, Shapes.box(0.125, 0, 0.125, 0.875, 0.0625, 0.875), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0, 1, 1, 0.125), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0.875, 1, 1, 1), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.875, 0, 0.125, 1, 1, 0.875), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0, 0, 0.125, 0.125, 1, 0.875), BooleanOp.OR);
+
+        return shape;
     }
 }

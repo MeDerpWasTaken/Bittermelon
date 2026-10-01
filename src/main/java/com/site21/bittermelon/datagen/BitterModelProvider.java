@@ -854,7 +854,7 @@ public class BitterModelProvider extends ModelProvider {
         blockModels.registerSimpleItemModel(block, ModelLocationUtils.getModelLocation(block));
     }
 
-    public void createDrum(@NotNull BlockModelGenerators blockModels, Block block) {
+    public void createDrumOld(@NotNull BlockModelGenerators blockModels, Block block) {
         Material side = getBlockTexture(block, "_side");
         Material bottom = getBlockTexture(block, "_bottom");
 
@@ -871,6 +871,29 @@ public class BitterModelProvider extends ModelProvider {
                 ModelTemplates.CUBE_BOTTOM_TOP.create(block, closedMapping, blockModels.modelOutput));
         MultiVariant open = plainVariant(
                 ModelTemplates.CUBE_BOTTOM_TOP.createWithSuffix(block, "_open", openMapping, blockModels.modelOutput));
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(block)
+                        .with(PropertyDispatch.initial(BarrelBlock.FACING, BarrelBlock.OPEN)
+                                .generate((facing, isOpen) -> {
+                                    MultiVariant base = isOpen ? open : closed;
+                                    return switch (facing) {
+                                        case DOWN -> base.with(X_ROT_180);
+                                        case NORTH -> base.with(X_ROT_90);
+                                        case EAST -> base.with(X_ROT_90).with(Y_ROT_90);
+                                        case SOUTH -> base.with(X_ROT_90).with(Y_ROT_180);
+                                        case WEST -> base.with(X_ROT_90).with(Y_ROT_270);
+                                        default -> base;
+                                    };
+                                }))
+        );
+
+        blockModels.registerSimpleItemModel(block, ModelLocationUtils.getModelLocation(block));
+    }
+
+    public void createDrum(@NotNull BlockModelGenerators blockModels, Block block) {
+        MultiVariant closed = plainVariant(DRUM.create(block, TextureMapping.defaultTexture(block), blockModels.modelOutput));
+        MultiVariant open = plainVariant(DRUM_OPEN.create(block, TextureMapping.defaultTexture(block), blockModels.modelOutput));
 
         blockModels.blockStateOutput.accept(
                 MultiVariantGenerator.dispatch(block)

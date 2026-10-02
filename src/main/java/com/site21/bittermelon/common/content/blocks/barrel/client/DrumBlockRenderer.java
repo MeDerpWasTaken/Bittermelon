@@ -69,14 +69,21 @@ public class DrumBlockRenderer implements BlockEntityRenderer<DrumBlockEntity, D
     public void submit(DrumBlockRenderState state, PoseStack poseStack, SubmitNodeCollector collector, CameraRenderState camera) {
         if (state.block != null) {
             Direction dir = state.moveDirection;
+            float angle = 90f * state.rotation * dir.getAxisDirection().getStep();
+
             Quaternionf rot = switch (dir.getAxis()) {
-                case X -> Axis.ZP.rotationDegrees(-90 * dir.getStepX() * state.rotation);
-                case Z -> Axis.XP.rotationDegrees(90 * dir.getStepZ() * state.rotation);
+                case X -> Axis.ZP.rotationDegrees(-angle);
+                case Z -> Axis.XP.rotationDegrees(angle);
                 default -> new Quaternionf();
             };
 
+            double px = dir == Direction.EAST ? 1 : 0;
+            double pz = dir == Direction.SOUTH ? 1 : 0;
+
             poseStack.pushPose();
+            poseStack.translate(px, 0, pz);
             poseStack.mulPose(rot);
+            poseStack.translate(-px, 0, -pz);
             collector.submitMovingBlock(poseStack, state.block);
             submitFluid(state, poseStack, collector);
             poseStack.popPose();

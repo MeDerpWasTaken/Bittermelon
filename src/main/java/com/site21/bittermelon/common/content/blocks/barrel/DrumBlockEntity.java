@@ -4,11 +4,13 @@ import com.site21.bittermelon.common.systems.fluid.substance.MixtureOwner;
 import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluid;
 import com.site21.bittermelon.common.systems.substance.SubstanceMixture;
 import com.site21.bittermelon.init.neoforge.BitterBlockEntities;
+import com.site21.bittermelon.init.neoforge.BitterSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -21,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.site21.bittermelon.common.content.blocks.barrel.DrumBlock.ROLLING;
 import static net.minecraft.world.level.block.Block.UPDATE_CLIENTS;
-import static net.minecraft.world.level.block.BrushableBlock.TICK_DELAY;
 
 public class DrumBlockEntity extends BlockEntity implements MixtureOwner {
     private static final float ROT_SPEED = 0.1f;
@@ -54,10 +55,24 @@ public class DrumBlockEntity extends BlockEntity implements MixtureOwner {
 
     private void move(Level level, BlockPos pos, BlockState state) {
         BlockPos newPos = pos.relative(moveDirection);
+        Direction oldFacing = state.getValue(DrumBlock.FACING);
+        Direction newFacing = rollFacing(state.getValue(DrumBlock.FACING), moveDirection);
+
         BlockState newState = state
                 .setValue(ROLLING, false)
-                .setValue(DrumBlock.FACING, rollFacing(state.getValue(DrumBlock.FACING), moveDirection));
+                .setValue(DrumBlock.FACING, newFacing);
         level.setBlock(newPos, newState, Block.UPDATE_ALL);
+
+        if (oldFacing.getAxis() != newFacing.getAxis()) {
+            level.playSound(
+                    null,
+                    pos,
+                    BitterSounds.METAL_DRUM_FLIP.value(),
+                    SoundSource.BLOCKS,
+                    0.5f,
+                     1.0f + (1.0f - getMixture().getVolume() / (float) SubstanceFluid.FULL_BLOCK_VOLUME) * 0.2f
+            );
+        }
 
         if (level.getBlockEntity(newPos) instanceof DrumBlockEntity movedBarrel) {
             movedBarrel.setMixture(getMixture());

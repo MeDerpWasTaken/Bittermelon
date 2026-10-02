@@ -1,5 +1,6 @@
 package com.site21.bittermelon.common.content.blocks.barrel;
 
+import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluid;
 import com.site21.bittermelon.common.systems.substance.SubstanceStack;
 import com.site21.bittermelon.init.neoforge.BitterSounds;
 import com.site21.bittermelon.util.SubstanceUtil;
@@ -106,7 +107,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         level.playSound(
                 null,
                 pos,
-                soundType.getFallSound(),
+                BitterSounds.METAL_DRUM_FLIP.value(),
                 SoundSource.BLOCKS,
                 soundType.getVolume(),
                 soundType.getPitch()
@@ -188,7 +189,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         if (!isFree(level.getBlockState(pos.relative(pushDirection)))) return InteractionResult.PASS;
         if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
             if (!level.isClientSide()) {
-                playRollSound(level, pos, state, Mth.clamp(1.0f - barrel.getMixture().getVolume() / 1000f, 0.1f, 1.0f));
+                playRollSound(level, pos, state, Math.max(1.0f - barrel.getMixture().getVolume() / (float) SubstanceFluid.FULL_BLOCK_VOLUME, 0.1f));
             }
 
             barrel.setMoveDirection(pushDirection);

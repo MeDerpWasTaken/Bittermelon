@@ -134,5 +134,6 @@ public class BitterSoundDefinitionsProvider extends SoundDefinitionsProvider {
 
         // Block
         simple(BitterSounds.METAL_DRUM_ROLL, "block/metal_drum_roll_1", "block/metal_drum_roll_2", "block/metal_drum_roll_3");
+        simple(BitterSounds.METAL_DRUM_FLIP, "block/metal_drum_flip");
     }
 }

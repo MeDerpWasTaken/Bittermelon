@@ -1,8 +1,7 @@
 package com.site21.bittermelon.common.content.blocks.barrel;
 
-import com.site21.bittermelon.common.content.items.substance.FluidContainerItem;
 import com.site21.bittermelon.common.systems.substance.SubstanceStack;
-import com.site21.bittermelon.init.neoforge.BitterDataComponents;
+import com.site21.bittermelon.init.neoforge.BitterSounds;
 import com.site21.bittermelon.util.SubstanceUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -11,13 +10,11 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -50,18 +47,20 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
     private static final int TICK_DELAY = 2;
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
+    public static final BooleanProperty ROLLING = BooleanProperty.create("rolling");
 
     public DrumBlock(Properties properties) {
         super(properties);
         registerDefaultState(getStateDefinition().any()
                 .setValue(FACING, Direction.NORTH)
                 .setValue(OPEN, false)
+                .setValue(ROLLING, false)
         );
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, OPEN);
+        builder.add(FACING, OPEN, ROLLING);
     }
 
     @Override
@@ -71,10 +70,13 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState blockState, BlockEntityType<T> type) {
-        if (level.isClientSide()) return null;
         return (lvl, pos, state, blockEntity) -> {
             if (blockEntity instanceof DrumBlockEntity barrel) {
-                barrel.tick(lvl, pos, state);
+                if (level.isClientSide()) {
+                    barrel.tickAnimation();
+                } else {
+                    barrel.tick(lvl, pos, state);
+                }
             }
         };
     }
@@ -82,6 +84,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
         if (level.isClientSide()) return;
+        if (state.getValue(FACING) != Direction.UP) return;
         Vec3 offset = entity.position().subtract(Vec3.atCenterOf(pos));
         if (offset.x * offset.x + offset.z * offset.z < 1.0E-4) return;
 
@@ -90,23 +93,10 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         if (pushDirection.getAxis() == facing.getAxis()) return;
 
         if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
-            if (facing == Direction.UP) {
-                if (level.getRandom().nextFloat() < 0.2f + (1 - barrel.getMixture().getVolume() / 1000f)) {
-                    level.setBlockAndUpdate(pos, state.setValue(FACING, pushDirection));
-                    playFlipSound(level, pos, state);
-                }
-                return;
+            if (level.getRandom().nextFloat() < 0.2f + (1 - barrel.getMixture().getVolume() / 1000f)) {
+                level.setBlockAndUpdate(pos, state.setValue(FACING, pushDirection));
+                playFlipSound(level, pos, state);
             }
-
-            BlockPos newPos = pos.relative(pushDirection);
-            if (!isFree(level.getBlockState(newPos))) return;
-
-            level.removeBlock(pos, false);
-            level.setBlock(newPos, state.setValue(FACING, facing), Block.UPDATE_ALL);
-            if (level.getBlockEntity(newPos) instanceof DrumBlockEntity movedBarrel) {
-                movedBarrel.setMixture(barrel.getMixture());
-            }
-            playRollSound(level, newPos, state);
         }
     }
 
@@ -125,7 +115,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         level.playSound(
                 null,
                 pos,
-                state.getSoundType().getStepSound(),
+                BitterSounds.DRAG.value(),
                 SoundSource.BLOCKS,
                 state.getSoundType().getVolume(),
                 state.getSoundType().getPitch()
@@ -152,6 +142,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
             List<SubstanceStack> substances = barrel.getMixture().spreadSubstancesByPercentage(0.1f);
             SubstanceUtil.spill(level, spillPos, substances);
             barrel.getMixture().removeSubstances(substances);
+            level.scheduleTick(pos, this, TICK_DELAY);
         }
     }
 
@@ -172,18 +163,32 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
-        if (!level.isClientSide()) {
-            boolean open = state.getValue(OPEN);
-            level.setBlock(pos, state.setValue(OPEN, !open), UPDATE_ALL);
-            level.playSound(
-                    null,
-                    pos,
-                    open ? SoundEvents.BARREL_CLOSE : SoundEvents.BARREL_OPEN,
-                    SoundSource.BLOCKS,
-                    state.getSoundType().getVolume(),
-                    state.getSoundType().getPitch()
-            );
+        Direction hitDirection = hitResult.getDirection();
+        if ((hitResult.getLocation().distanceTo(pos.getCenter()) < 0.5 || state.getValue(FACING) == hitDirection) && !player.isShiftKeyDown()) {
+            if (!level.isClientSide()) {
+                boolean open = state.getValue(OPEN);
+                level.setBlock(pos, state.setValue(OPEN, !open), UPDATE_ALL);
+                level.playSound(
+                        null,
+                        pos,
+                        open ? SoundEvents.BARREL_CLOSE : SoundEvents.BARREL_OPEN,
+                        SoundSource.BLOCKS,
+                        state.getSoundType().getVolume(),
+                        state.getSoundType().getPitch()
+                );
+            }
+
+            return InteractionResult.SUCCESS;
         }
+
+        Direction pushDirection = hitResult.getDirection().getOpposite();
+        if (!isFree(level.getBlockState(pos.relative(pushDirection)))) return InteractionResult.PASS;
+        if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
+            barrel.setMoveDirection(pushDirection);
+            level.setBlock(pos, state.setValue(ROLLING, true), UPDATE_ALL);
+        }
+        if (!level.isClientSide()) playRollSound(level, pos, state);
+
         return InteractionResult.SUCCESS;
     }
 
@@ -204,15 +209,35 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return COLLISION;
+        return state.getValue(OPEN) ? OPEN_SHAPE : CLOSED_SHAPE;
     }
 
     @Override
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        if (state.getValue(ROLLING)) {
+            return Shapes.empty();
+        }
+
         return state.getValue(OPEN) ? OPEN_SHAPE : CLOSED_SHAPE;
     }
 
-    private static VoxelShape closedShape(){
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        if (state.getValue(ROLLING)) {
+            return RenderShape.INVISIBLE;
+        }
+        return RenderShape.MODEL;
+    }
+
+    @Override
+    protected VoxelShape getOcclusionShape(BlockState state) {
+        if (state.getValue(ROLLING)) {
+            return Shapes.empty();
+        }
+        return super.getOcclusionShape(state);
+    }
+
+    private static VoxelShape closedShape() {
         VoxelShape shape = Shapes.empty();
         shape = Shapes.join(shape, Shapes.box(0.125, 0, 0.125, 0.875, 0.0625, 0.875), BooleanOp.OR);
         shape = Shapes.join(shape, Shapes.box(0.125, 0.9375, 0.125, 0.875, 1, 0.875), BooleanOp.OR);
@@ -224,7 +249,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         return shape;
     }
 
-    private static VoxelShape openShape(){
+    private static VoxelShape openShape() {
         VoxelShape shape = Shapes.empty();
         shape = Shapes.join(shape, Shapes.box(0.125, 0, 0.125, 0.875, 0.0625, 0.875), BooleanOp.OR);
         shape = Shapes.join(shape, Shapes.box(0, 0, 0, 1, 1, 0.125), BooleanOp.OR);

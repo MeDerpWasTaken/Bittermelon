@@ -6,6 +6,7 @@ import com.site21.bittermelon.client.particles.BoomParticle;
 import com.site21.bittermelon.client.particles.KapowParticle;
 import com.site21.bittermelon.client.particles.PlasticParticle;
 import com.site21.bittermelon.client.render.FogRenderer;
+import com.site21.bittermelon.common.content.blocks.barrel.client.DrumBlockRenderer;
 import com.site21.bittermelon.common.content.blocks.electronics.intercom.client.PhoneCordRenderer;
 import com.site21.bittermelon.common.content.blocks.electronics.largeslidingdoor.client.LargeSlidingDoorRenderer;
 import com.site21.bittermelon.common.content.blocks.electronics.slidingdoor.client.SlidingDoorRenderer;
@@ -190,6 +191,7 @@ public class ClientSetup {
         event.registerBlockEntityRenderer(BitterBlockEntities.WALL_WRITING_BLOCK_ENTITY.get(), WallWritingRenderer::new);
         event.registerBlockEntityRenderer(BitterBlockEntities.TELEVISION_BLOCK_ENTITY.get(), TelevisionRenderer::new);
         event.registerBlockEntityRenderer(BitterBlockEntities.PLASTIC_FLAMINGO_BLOCK_ENTITY.get(), FlamingoBlockRenderer::new);
+        event.registerBlockEntityRenderer(BitterBlockEntities.DRUM_BLOCK_ENTITY.get(), DrumBlockRenderer::new);
     }
 
     @SubscribeEvent

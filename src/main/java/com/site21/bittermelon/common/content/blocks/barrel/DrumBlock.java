@@ -101,24 +101,26 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
     }
 
     private void playFlipSound(Level level, BlockPos pos, BlockState state) {
+        SoundType soundType = state.getSoundType(level, pos, null);
         level.playSound(
                 null,
                 pos,
-                state.getSoundType().getPlaceSound(),
+                soundType.getFallSound(),
                 SoundSource.BLOCKS,
-                state.getSoundType().getVolume(),
-                state.getSoundType().getPitch()
+                soundType.getVolume(),
+                soundType.getPitch()
         );
     }
 
     private void playRollSound(Level level, BlockPos pos, BlockState state) {
+        SoundType soundType = state.getSoundType(level, pos, null);
         level.playSound(
                 null,
                 pos,
-                BitterSounds.DRAG.value(),
+                BitterSounds.METAL_DRUM_ROLL.value(),
                 SoundSource.BLOCKS,
-                state.getSoundType().getVolume(),
-                state.getSoundType().getPitch()
+                soundType.getVolume(),
+                soundType.getPitch()
         );
     }
 
@@ -183,11 +185,11 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
         Direction pushDirection = hitResult.getDirection().getOpposite();
         if (!isFree(level.getBlockState(pos.relative(pushDirection)))) return InteractionResult.PASS;
+        if (!level.isClientSide()) playRollSound(level, pos, state);
         if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
             barrel.setMoveDirection(pushDirection);
             level.setBlock(pos, state.setValue(ROLLING, true), UPDATE_ALL);
         }
-        if (!level.isClientSide()) playRollSound(level, pos, state);
 
         return InteractionResult.SUCCESS;
     }

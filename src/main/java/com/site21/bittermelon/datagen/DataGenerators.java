@@ -12,5 +12,6 @@ public class DataGenerators {
     public static void gatherData(GatherDataEvent.Client event) {
         event.createProvider(BitterModelProvider::new);
         event.createProvider(BitterLanguageProvider::new);
+        event.createProvider(BitterSoundDefinitionsProvider::new);
     }
 }

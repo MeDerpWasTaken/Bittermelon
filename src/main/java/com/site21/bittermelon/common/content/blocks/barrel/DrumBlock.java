@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -112,7 +113,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         );
     }
 
-    private void playRollSound(Level level, BlockPos pos, BlockState state) {
+    private void playRollSound(Level level, BlockPos pos, BlockState state, float pitch) {
         SoundType soundType = state.getSoundType(level, pos, null);
         level.playSound(
                 null,
@@ -120,7 +121,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
                 BitterSounds.METAL_DRUM_ROLL.value(),
                 SoundSource.BLOCKS,
                 soundType.getVolume(),
-                soundType.getPitch()
+                pitch
         );
     }
 
@@ -185,8 +186,11 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
         Direction pushDirection = hitResult.getDirection().getOpposite();
         if (!isFree(level.getBlockState(pos.relative(pushDirection)))) return InteractionResult.PASS;
-        if (!level.isClientSide()) playRollSound(level, pos, state);
         if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
+            if (!level.isClientSide()) {
+                playRollSound(level, pos, state, Mth.clamp(1.0f - barrel.getMixture().getVolume() / 1000f, 0.1f, 1.0f));
+            }
+
             barrel.setMoveDirection(pushDirection);
             level.setBlock(pos, state.setValue(ROLLING, true), UPDATE_ALL);
         }

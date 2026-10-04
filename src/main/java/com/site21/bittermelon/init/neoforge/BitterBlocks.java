@@ -38,7 +38,6 @@ import com.site21.bittermelon.common.content.entities.scp718.SCP718BlisterBlock;
 import com.site21.bittermelon.common.systems.fluid.simple.SimpleFluidBlock;
 import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluidBlock;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -46,6 +45,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.jetbrains.annotations.Contract;
@@ -53,7 +53,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.ToIntFunction;
 
-import static net.minecraft.world.level.block.SoundType.ANVIL;
 import static net.minecraft.world.level.block.SoundType.METAL;
 
 public class BitterBlocks {
@@ -212,7 +211,17 @@ public class BitterBlocks {
 
     public static final DeferredBlock<SubstanceFluidBlock> SUBSTANCE_FLUID = BLOCKS.registerBlock(
             "substance_fluid_block",
-            properties -> new SubstanceFluidBlock(properties.mapColor(MapColor.WATER))
+            properties -> new SubstanceFluidBlock(
+                    properties
+                            .mapColor(MapColor.WATER)
+                            .replaceable()
+                            .noCollision()
+                            .strength(100.0F)
+                            .pushReaction(PushReaction.DESTROY)
+                            .noLootTable()
+                            .liquid()
+                            .sound(SoundType.EMPTY)
+            )
     );
 
     public static final DeferredBlock<SimpleFluidBlock> SIMPLE_FLUID_BLOCK = BLOCKS.registerBlock(
@@ -396,7 +405,15 @@ public class BitterBlocks {
             "metal_drum",
             properties -> new DrumBlock(properties
                     .destroyTime(2.5f)
-                    .sound(ANVIL)
+                    .sound(new SoundType(
+                            0.3f,
+                            1.5f,
+                            SoundEvents.ANVIL_BREAK,
+                            SoundEvents.ANVIL_STEP,
+                            BitterSounds.METAL_DRUM_FLIP.value(),
+                            SoundEvents.ANVIL_HIT,
+                            BitterSounds.METAL_DRUM_FLIP.value()
+                    ))
             )
     );
 }

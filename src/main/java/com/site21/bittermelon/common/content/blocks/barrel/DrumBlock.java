@@ -97,12 +97,12 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
             if (level.getRandom().nextFloat() < 0.2f + (1 - barrel.getMixture().getVolume() / 1000f)) {
                 level.setBlockAndUpdate(pos, state.setValue(FACING, pushDirection));
-                playFlipSound(level, pos, state);
+                playFlipSound(level, pos, state, barrel.getMixture().getVolume());
             }
         }
     }
 
-    private void playFlipSound(Level level, BlockPos pos, BlockState state) {
+    private void playFlipSound(Level level, BlockPos pos, BlockState state, int volume) {
         SoundType soundType = state.getSoundType(level, pos, null);
         level.playSound(
                 null,
@@ -110,7 +110,7 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
                 BitterSounds.METAL_DRUM_FLIP.value(),
                 SoundSource.BLOCKS,
                 soundType.getVolume(),
-                soundType.getPitch()
+                1.0f + (1.0f - volume / (float) SubstanceFluid.FULL_BLOCK_VOLUME) * 0.2f
         );
     }
 
@@ -153,6 +153,14 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
     @Override
     protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
         level.scheduleTick(pos, this, TICK_DELAY);
+    }
+
+    @Override
+    public void onLand(Level level, BlockPos pos, BlockState state, BlockState replacedBlock, FallingBlockEntity entity) {
+        if (level.isClientSide()) return;
+        if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
+            playFlipSound(level, pos, state, barrel.getMixture().getVolume());
+        }
     }
 
     @Override

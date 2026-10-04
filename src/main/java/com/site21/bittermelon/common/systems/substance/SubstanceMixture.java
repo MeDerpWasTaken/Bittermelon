@@ -265,8 +265,14 @@ public class SubstanceMixture implements SubstanceContainer {
     }
 
     public List<SubstanceStack> spreadSubstancesByVolume(int transferVolume) {
+        float currentVolume = getVolume();
+
+        if (currentVolume <= 0) {
+            return Collections.emptyList();
+        }
+
         List<SubstanceStack> spreadStacks = new ArrayList<>();
-        float ratio = (float) transferVolume / getVolume();
+        float ratio = (float) transferVolume / currentVolume;
 
         for (SubstanceStack stack : substances) {
             int amount = (int) (stack.getAmount() * ratio);
@@ -282,10 +288,23 @@ public class SubstanceMixture implements SubstanceContainer {
     }
 
     public List<SubstanceStack> spreadSubstancesByPercentage(float percentage) {
-        if (getVolume() <= 0) {
-            return Collections.emptyList();
-        }
         return spreadSubstancesByVolume((int) (getVolume() * percentage));
+    }
+
+    public List<SubstanceStack> splitSubstances(int spreadCount, int pruneThreshold) {
+        List<SubstanceStack> spreadStacks = new ArrayList<>();
+
+        for (SubstanceStack stack : substances) {
+            int amount = stack.getAmount() / spreadCount;
+
+            if (amount > pruneThreshold) {
+                SubstanceStack spreadStack = stack.copy();
+                spreadStack.setAmount(amount);
+                spreadStacks.add(spreadStack);
+            }
+        }
+
+        return spreadStacks;
     }
 
     static {

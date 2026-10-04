@@ -2,12 +2,15 @@ package com.site21.bittermelon.common.systems.fluid.substance;
 
 import com.site21.bittermelon.common.systems.substance.SubstanceMixture;
 import com.site21.bittermelon.common.systems.substance.SubstanceStack;
+import com.site21.bittermelon.init.neoforge.BitterFluids;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.Profiler;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,6 +19,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.site21.bittermelon.init.neoforge.BitterBlockEntities.SUBSTANCE_FLUID_BLOCK_ENTITY;
@@ -44,10 +48,6 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
         mixture.updateSubstance(substance);
     }
 
-    public void updateSubstanceNoUpdate(SubstanceStack substance) {
-        mixture.updateSubstanceNoUpdate(substance);
-    }
-
     public void transferSubstances(@NotNull List<SubstanceStack> substances) {
         mixture.transferSubstances(substances);
     }
@@ -56,19 +56,11 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
         mixture.removeSubstance(substance, amount);
     }
 
-    public void removeSubstanceNoUpdate(SubstanceStack substance, int amount) {
-        mixture.removeSubstance(substance, amount);
-    }
-
     public void removeSubstances(@NotNull List<SubstanceStack> substances) {
         mixture.removeSubstances(substances);
     }
 
     public void removeSubstances(List<SubstanceStack> substances, int multiplier) {
-        mixture.removeSubstances(substances, multiplier);
-    }
-
-    public void removeSubstancesNoUpdate(List<SubstanceStack> substances, int multiplier) {
         mixture.removeSubstances(substances, multiplier);
     }
 
@@ -124,6 +116,40 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
         level.scheduleTick(worldPosition, SUBSTANCE_FLUID.get(), SUBSTANCE_FLUID.get().getTickDelay(level));
 
         Profiler.get().pop();
+    }
+
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (level == null) return;
+        displace(level, pos);
+    }
+
+    private void displace(Level level, BlockPos pos) {
+        SubstanceFluid fluid = SUBSTANCE_FLUID.get();
+        BlockPos.MutableBlockPos currentPos = new BlockPos.MutableBlockPos();
+        List<BlockPos> neighborPositions = new ArrayList<>(4);
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            currentPos.setWithOffset(pos, direction);
+            if (fluid.canSpreadTo(level, currentPos)) {
+                neighborPositions.add(currentPos.immutable());
+            }
+        }
+
+        if (neighborPositions.isEmpty()) {
+            currentPos.setWithOffset(pos, Direction.UP);
+            if (level.getBlockState(currentPos).canBeReplaced()) {
+                neighborPositions.add(currentPos.immutable());
+            }
+        }
+
+        if (neighborPositions.isEmpty()) return;
+
+        List<SubstanceStack> substances = mixture.splitSubstances(neighborPositions.size(), 1);
+        if (substances.isEmpty()) return;
+
+        for (BlockPos neighborPos : neighborPositions) {
+            SUBSTANCE_FLUID.get().spreadTo(level, neighborPos, substances);
+        }
     }
 
     public int getVolume() {

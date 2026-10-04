@@ -129,9 +129,9 @@ public class SubstanceCommand {
         }
 
         SubstanceStack stack = new SubstanceStack(substance, amount);
-        fluidBE.updateSubstance(stack);
+        fluidBE.getMixture().updateSubstance(stack);
         source.sendSuccess(() -> Component.literal(String.format("Added %d %s to the puddle", amount, stack.getSubstance().getName())), true);
-        source.sendSuccess(() -> Component.literal(fluidBE.getContentsDescription()), true);
+        source.sendSuccess(() -> Component.literal(fluidBE.getMixture().getContentsDescription()), true);
         return 1;
     }
 
@@ -151,7 +151,7 @@ public class SubstanceCommand {
             return 0;
         }
 
-        source.sendSuccess(() -> Component.literal(fluidBlockEntity.getContentsDescription()), true);
+        source.sendSuccess(() -> Component.literal(fluidBlockEntity.getMixture().getContentsDescription()), true);
         source.sendSuccess(() -> Component.literal("Volume: " + fluidBlockEntity.getVolume()), true);
         return 1;
     }

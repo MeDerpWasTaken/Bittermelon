@@ -49,7 +49,7 @@ public class BleedingEffect extends MobEffect {
         }
 
         if (level.getBlockEntity(pos) instanceof SubstanceFluidBlockEntity fluid) {
-            fluid.updateSubstance(stack);
+            fluid.getMixture().updateSubstance(stack);
         }
 
         return true;

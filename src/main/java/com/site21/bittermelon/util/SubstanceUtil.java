@@ -58,7 +58,7 @@ public final class SubstanceUtil {
         }
 
         if (level.getBlockEntity(pos) instanceof SubstanceFluidBlockEntity spreadBE) {
-            spreadBE.transferSubstances(substances);
+            spreadBE.getMixture().transferSubstances(substances);
             return true;
         }
 

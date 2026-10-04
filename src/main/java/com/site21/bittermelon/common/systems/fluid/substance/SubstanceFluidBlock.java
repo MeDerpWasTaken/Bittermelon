@@ -38,7 +38,6 @@ public class SubstanceFluidBlock extends Block implements LiquidBlockContainer, 
     private final List<FluidState> stateCache;
     private final SubstanceFluid fluid;
 
-
     public SubstanceFluidBlock(Properties properties) {
         super(properties);
         registerDefaultState(getStateDefinition().any().setValue(LEVEL, 20).setValue(LIT, false));

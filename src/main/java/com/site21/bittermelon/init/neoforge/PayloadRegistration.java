@@ -32,7 +32,6 @@ import com.site21.bittermelon.common.systems.economy.bank.networking.OpenATMScre
 import com.site21.bittermelon.common.systems.electronics.privilege.networking.OpenPrivilegeEditorScreen;
 import com.site21.bittermelon.common.systems.electronics.privilege.networking.RemovePrivilegeForBE;
 import com.site21.bittermelon.common.systems.electronics.privilege.networking.SetPrivilegeForBE;
-import com.site21.bittermelon.common.systems.fluid.substance.UpdateBlockAt;
 import com.site21.bittermelon.common.systems.medical.legacy.networking.*;
 import com.site21.bittermelon.common.systems.medical.wound.networking.WoundPacket;
 import com.site21.bittermelon.common.systems.personnel.privilege.networking.*;
@@ -567,12 +566,6 @@ public class PayloadRegistration {
                 ThrowCarriedEntity.TYPE,
                 ThrowCarriedEntity.STREAM_CODEC,
                 ThrowCarriedEntity::handle
-        );
-
-        registrar.playToClient(
-                UpdateBlockAt.TYPE,
-                UpdateBlockAt.STREAM_CODEC,
-                UpdateBlockAt::handle
         );
 
         registrar.playToClient(

@@ -40,47 +40,6 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
         mixture.setTemperature(500);
     }
 
-    public void tickReactions() {
-        mixture.tickReactions(level, worldPosition);
-    }
-
-    public void updateSubstance(SubstanceStack substance) {
-        mixture.updateSubstance(substance);
-    }
-
-    public void transferSubstances(@NotNull List<SubstanceStack> substances) {
-        mixture.transferSubstances(substances);
-    }
-
-    public void removeSubstance(SubstanceStack substance, int amount) {
-        mixture.removeSubstance(substance, amount);
-    }
-
-    public void removeSubstances(@NotNull List<SubstanceStack> substances) {
-        mixture.removeSubstances(substances);
-    }
-
-    public void removeSubstances(List<SubstanceStack> substances, int multiplier) {
-        mixture.removeSubstances(substances, multiplier);
-    }
-
-    public List<SubstanceStack> getSubstances() {
-        return mixture.getSubstances();
-    }
-
-    public void setSubstances(List<SubstanceStack> newSubstances) {
-        mixture.setSubstances(newSubstances);
-    }
-
-    public void mergeSubstances(@NotNull List<SubstanceStack> substances, SubstanceStack stack) {
-        mixture.mergeSubstances(substances, stack);
-    }
-
-    public void setSubstancesQuiet(List<SubstanceStack> stacks) {
-        mixture.setSubstances(stacks);
-        setChanged();
-    }
-
     public void updateFluidState() {
         if (level == null) return;
         if (level.getBlockState(worldPosition).isAir()) return;
@@ -96,23 +55,6 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
             level.setBlock(worldPosition, newState, UPDATE_ALL);
         }
 
-        level.scheduleTick(worldPosition, SUBSTANCE_FLUID.get(), SUBSTANCE_FLUID.get().getTickDelay(level));
-
-        Profiler.get().pop();
-    }
-
-    public void updateFluidStateOld() {
-        if (level == null) return;
-        if (level.getBlockState(worldPosition).isAir()) return;
-
-        Profiler.get().push("updateFluidState");
-
-        int fluidLevel = Math.max(1, Mth.clamp(getVolume() / 50, 1, 19));
-
-        BlockState currentState = level.getBlockState(worldPosition);
-        BlockState newState = currentState.setValue(SubstanceFluidBlock.LEVEL, fluidLevel);
-
-        level.setBlock(worldPosition, newState, UPDATE_ALL);
         level.scheduleTick(worldPosition, SUBSTANCE_FLUID.get(), SUBSTANCE_FLUID.get().getTickDelay(level));
 
         Profiler.get().pop();
@@ -152,22 +94,6 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
         }
     }
 
-    public int getVolume() {
-        return mixture.getVolume();
-    }
-
-    public float getTemperature() {
-        return mixture.getTemperature();
-    }
-
-    public int getColor() {
-        return mixture.getColor();
-    }
-
-    public int getViscosity() {
-        return mixture.getViscosity();
-    }
-
     /**
      * Calculates the pressure based on the fluid's volume.
      * The pressure is defined as the difference between the full block volume and the current volume of the fluid.
@@ -176,10 +102,6 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
      */
     public int getPressure() {
         return getVolume() - SubstanceFluid.FULL_BLOCK_VOLUME;
-    }
-
-    public String getContentsDescription() {
-        return mixture.getContentsDescription();
     }
 
     @Override

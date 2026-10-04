@@ -72,7 +72,7 @@ public class SubstanceFluid extends Fluid {
                 return;
             }
 
-            fluidBE.tickReactions();
+            fluidBE.getMixture().tickReactions(level, pos);
 
             if (spreadDownwards(level, pos, fluidBE)) return;
 
@@ -102,13 +102,13 @@ public class SubstanceFluid extends Fluid {
     }
 
     private boolean spreadDownwards(@NotNull Level level, @NotNull BlockPos pos, @NotNull SubstanceFluidBlockEntity fluidBE) {
-        List<SubstanceStack> substances = fluidBE.getSubstances();
+        List<SubstanceStack> substances = fluidBE.getMixture().getSubstances();
 
         if (substances.isEmpty()) return false;
         if (!canSpreadTo(level, pos.below())) return false;
 
         spreadTo(level, pos.below(), substances);
-        fluidBE.setSubstances(new ArrayList<>());
+        fluidBE.getMixture().setSubstances(new ArrayList<>());
         return true;
     }
 
@@ -139,7 +139,7 @@ public class SubstanceFluid extends Fluid {
             spreadTo(level, spreadPos, substancesToSpread);
         }
 
-        fluidBE.removeSubstances(substancesToSpread, spreadCount);
+        fluidBE.getMixture().removeSubstances(substancesToSpread, spreadCount);
         equalizeSubstances(level, pos, fluidBE);
 
         Profiler.get().pop();
@@ -153,7 +153,7 @@ public class SubstanceFluid extends Fluid {
                 sourceVolume / (spreadCount + 1);
 
         return spreadSubstancesByVolume(
-                fluidBE.getSubstances(),
+                fluidBE.getMixture().getSubstances(),
                 spreadVolume,
                 sourceVolume
         );
@@ -196,14 +196,14 @@ public class SubstanceFluid extends Fluid {
         BlockPos abovePos = pos.above();
 
         if (level.getFluidState(abovePos).is(this) || level.getBlockState(abovePos).canBeReplaced()) {
-            List<SubstanceStack> substancesToSpread = spreadSubstancesByVolume(fluidBE.getSubstances(), spreadVolume,
+            List<SubstanceStack> substancesToSpread = spreadSubstancesByVolume(fluidBE.getMixture().getSubstances(), spreadVolume,
                     fluidBE.getVolume());
             if (substancesToSpread.isEmpty()) return;
 
             spreadTo(level, abovePos, substancesToSpread);
 
             for (SubstanceStack spreadStack : substancesToSpread) {
-                fluidBE.removeSubstance(spreadStack, spreadStack.getAmount());
+                fluidBE.getMixture().removeSubstance(spreadStack, spreadStack.getAmount());
             }
         }
     }
@@ -287,7 +287,7 @@ public class SubstanceFluid extends Fluid {
 
         Map<Substance, Integer> totalsByType = new HashMap<>();
         for (SubstanceFluidBlockEntity be : fluids) {
-            for (SubstanceStack stack : be.getSubstances()) {
+            for (SubstanceStack stack : be.getMixture().getSubstances()) {
                 totalsByType.merge(stack.getSubstance(), stack.getAmount(), Integer::sum);
             }
 //            if (level instanceof ServerLevel serverLevel) {
@@ -317,73 +317,7 @@ public class SubstanceFluid extends Fluid {
                 }
             }
 
-            be.setSubstances(newStacks);
-        }
-
-        Profiler.get().pop();
-    }
-
-    private void equalizeSubstancesBFS(@NotNull Level level, BlockPos pos, SubstanceFluidBlockEntity fluidBE) {
-        Profiler.get().push("equalizeSubstances");
-
-        List<SubstanceFluidBlockEntity> fluids = new ArrayList<>();
-        Set<BlockPos> visited = new HashSet<>();
-        Queue<BlockPos> queue = new ArrayDeque<>();
-
-        queue.add(pos);
-        visited.add(pos);
-        int maxVisited = 256;
-
-        while (!queue.isEmpty() && visited.size() <= maxVisited) {
-            BlockPos current = queue.poll();
-
-            if (level.getBlockEntity(current) instanceof SubstanceFluidBlockEntity be) {
-                fluids.add(be);
-
-                for (Direction direction : Direction.Plane.HORIZONTAL) {
-                    BlockPos neighbor = current.relative(direction);
-                    if (!visited.contains(neighbor) && level.getBlockEntity(neighbor) instanceof SubstanceFluidBlockEntity) {
-                        visited.add(neighbor);
-                        queue.add(neighbor);
-                    }
-                }
-            }
-        }
-
-        if (fluids.size() < 2) {
-            Profiler.get().pop();
-            return;
-        }
-
-        int fluidCount = fluids.size();
-        Map<Substance, Integer> totalsByType = new HashMap<>();
-
-        for (SubstanceFluidBlockEntity be : fluids) {
-            for (SubstanceStack stack : be.getSubstances()) {
-                totalsByType.merge(stack.getSubstance(), stack.getAmount(), Integer::sum);
-            }
-
-//            if (level instanceof ServerLevel serverLevel) {
-//                serverLevel.sendParticles(ParticleTypes.BUBBLE, be.getBlockPos().getX() + 0.5, be.getBlockPos().getY() + 1,
-//                        be.getBlockPos().getZ() + 0.5, 1, 0, 0, 0, 0.1);
-//            }
-        }
-
-        for (SubstanceFluidBlockEntity be : fluids) {
-            List<SubstanceStack> newStacks = new ArrayList<>(totalsByType.size());
-
-            for (var entry : totalsByType.entrySet()) {
-                int amount = entry.getValue() / fluidCount;
-                if (amount > 0) {
-                    SubstanceStack newStack = entry.getKey().toStack();
-                    if (newStack != null) {
-                        newStack.setAmount(amount);
-                        newStacks.add(newStack);
-                    }
-                }
-            }
-
-            be.setSubstances(newStacks);
+            be.getMixture().setSubstances(newStacks);
         }
 
         Profiler.get().pop();
@@ -397,7 +331,7 @@ public class SubstanceFluid extends Fluid {
         }
 
         if (level.getBlockEntity(pos) instanceof SubstanceFluidBlockEntity spreadBE) {
-            spreadBE.transferSubstances(substances);
+            spreadBE.getMixture().transferSubstances(substances);
         }
     }
 
@@ -442,9 +376,9 @@ public class SubstanceFluid extends Fluid {
         int absorb = Math.min(stainHeadroom, (int) (fluidVolume * contactFactor));
         if (absorb <= 0) return;
 
-        List<SubstanceStack> absorbed = spreadSubstancesByVolume(fluidBE.getSubstances(), absorb, fluidVolume);
+        List<SubstanceStack> absorbed = spreadSubstancesByVolume(fluidBE.getMixture().getSubstances(), absorb, fluidVolume);
         if (!absorbed.isEmpty()) {
-            fluidBE.removeSubstances(absorbed);
+            fluidBE.getMixture().removeSubstances(absorbed);
             stains.transferSubstances(absorbed);
         }
     }

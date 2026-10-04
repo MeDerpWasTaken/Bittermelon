@@ -192,7 +192,7 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.@NotNull EntityInteract event) {
-        if (CarryHandler.playerPickUpEntity(event.getEntity(), event.getTarget())) {
+        if (event.getTarget() instanceof LivingEntity target && CarryHandler.playerPickUpEntity(event.getEntity(), target)) {
             event.setCanceled(true);
         }
     }

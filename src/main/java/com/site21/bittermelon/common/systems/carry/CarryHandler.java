@@ -43,7 +43,7 @@ public class CarryHandler {
      * @param target  The entity to be picked up.
      * @return True if the target was successfully picked up, false otherwise.
      */
-    public static boolean pickUpEntity(LivingEntity carrier, @NotNull Entity target) {
+    public static boolean pickUpEntity(LivingEntity carrier, @NotNull LivingEntity target) {
         if (!target.isAlive()) return false;
 
         target.startRiding(carrier, true, true);
@@ -58,7 +58,7 @@ public class CarryHandler {
      * @param target The entity to be picked up.
      * @return True if the entity was successfully picked up, false otherwise.
      */
-    public static boolean playerPickUpEntity(@NotNull Player player, @NotNull Entity target) {
+    public static boolean playerPickUpEntity(@NotNull Player player, @NotNull LivingEntity target) {
         if (!player.getMainHandItem().isEmpty() || !player.getOffhandItem().isEmpty()) return false;
 
         if (player.isShiftKeyDown()) {

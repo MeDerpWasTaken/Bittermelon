@@ -1,5 +1,6 @@
 package com.site21.bittermelon.common.content.blocks.barrel;
 
+import com.mojang.math.OctahedralGroup;
 import com.site21.bittermelon.common.systems.fluid.substance.SubstanceFluid;
 import com.site21.bittermelon.common.systems.substance.SubstanceStack;
 import com.site21.bittermelon.init.neoforge.BitterSounds;
@@ -10,18 +11,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -32,7 +27,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -40,12 +34,27 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 public class DrumBlock extends Block implements Fallable, EntityBlock {
-    private static final double INSET = 0.001;
-    private static final VoxelShape COLLISION = Shapes.box(INSET, 0, INSET, 1 - INSET, 1, 1 - INSET);
     private static final VoxelShape CLOSED_SHAPE = closedShape();
     private static final VoxelShape OPEN_SHAPE = openShape();
+    private static final Map<Direction, VoxelShape> OPEN_SHAPES = Map.of(
+            Direction.UP, OPEN_SHAPE,
+            Direction.DOWN, Shapes.rotate(OPEN_SHAPE, OctahedralGroup.BLOCK_ROT_X_180),
+            Direction.NORTH, Shapes.rotate(OPEN_SHAPE, OctahedralGroup.BLOCK_ROT_X_90),
+            Direction.SOUTH, Shapes.rotate(OPEN_SHAPE, OctahedralGroup.BLOCK_ROT_X_270),
+            Direction.WEST, Shapes.rotate(OPEN_SHAPE, OctahedralGroup.BLOCK_ROT_Z_270),
+            Direction.EAST, Shapes.rotate(OPEN_SHAPE, OctahedralGroup.BLOCK_ROT_Z_90)
+    );
+    private static final Map<Direction, VoxelShape> CLOSED_SHAPES = Map.of(
+            Direction.UP, CLOSED_SHAPE,
+            Direction.DOWN, Shapes.rotate(CLOSED_SHAPE, OctahedralGroup.BLOCK_ROT_X_180),
+            Direction.NORTH, Shapes.rotate(CLOSED_SHAPE, OctahedralGroup.BLOCK_ROT_X_90),
+            Direction.SOUTH, Shapes.rotate(CLOSED_SHAPE, OctahedralGroup.BLOCK_ROT_X_270),
+            Direction.WEST, Shapes.rotate(CLOSED_SHAPE, OctahedralGroup.BLOCK_ROT_Z_270),
+            Direction.EAST, Shapes.rotate(CLOSED_SHAPE, OctahedralGroup.BLOCK_ROT_Z_90)
+    );
     private static final int TICK_DELAY = 2;
     public static final EnumProperty<Direction> FACING = BlockStateProperties.FACING;
     public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
@@ -81,49 +90,6 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
                 }
             }
         };
-    }
-
-    @Override
-    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise) {
-        if (level.isClientSide()) return;
-        if (state.getValue(FACING) != Direction.UP) return;
-        Vec3 offset = entity.position().subtract(Vec3.atCenterOf(pos));
-        if (offset.x * offset.x + offset.z * offset.z < 1.0E-4) return;
-
-        Direction pushDirection = Direction.getApproximateNearest(offset.x, 0, offset.z).getOpposite();
-        Direction facing = state.getValue(FACING);
-        if (pushDirection.getAxis() == facing.getAxis()) return;
-
-        if (level.getBlockEntity(pos) instanceof DrumBlockEntity barrel) {
-            if (level.getRandom().nextFloat() < 0.2f + (1 - barrel.getMixture().getVolume() / 1000f)) {
-                level.setBlockAndUpdate(pos, state.setValue(FACING, pushDirection));
-                playFlipSound(level, pos, state, barrel.getMixture().getVolume());
-            }
-        }
-    }
-
-    private void playFlipSound(Level level, BlockPos pos, BlockState state, int volume) {
-        SoundType soundType = state.getSoundType(level, pos, null);
-        level.playSound(
-                null,
-                pos,
-                BitterSounds.METAL_DRUM_FLIP.value(),
-                SoundSource.BLOCKS,
-                soundType.getVolume(),
-                1.0f + (1.0f - volume / (float) SubstanceFluid.FULL_BLOCK_VOLUME) * 0.2f
-        );
-    }
-
-    private void playRollSound(Level level, BlockPos pos, BlockState state, float pitch) {
-        SoundType soundType = state.getSoundType(level, pos, null);
-        level.playSound(
-                null,
-                pos,
-                BitterSounds.METAL_DRUM_ROLL.value(),
-                SoundSource.BLOCKS,
-                soundType.getVolume(),
-                pitch
-        );
     }
 
     @Override
@@ -207,6 +173,30 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
         return InteractionResult.SUCCESS;
     }
 
+    private void playFlipSound(Level level, BlockPos pos, BlockState state, int volume) {
+        SoundType soundType = state.getSoundType(level, pos, null);
+        level.playSound(
+                null,
+                pos,
+                BitterSounds.METAL_DRUM_FLIP.value(),
+                SoundSource.BLOCKS,
+                soundType.getVolume(),
+                1.0f + (1.0f - volume / (float) SubstanceFluid.FULL_BLOCK_VOLUME) * 0.2f
+        );
+    }
+
+    private void playRollSound(Level level, BlockPos pos, BlockState state, float pitch) {
+        SoundType soundType = state.getSoundType(level, pos, null);
+        level.playSound(
+                null,
+                pos,
+                BitterSounds.METAL_DRUM_ROLL.value(),
+                SoundSource.BLOCKS,
+                soundType.getVolume(),
+                pitch
+        );
+    }
+
     @Override
     protected BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
@@ -224,7 +214,8 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
 
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(OPEN) ? OPEN_SHAPE : CLOSED_SHAPE;
+        Direction facing = state.getValue(FACING);
+        return state.getValue(OPEN) ? OPEN_SHAPES.get(facing) : CLOSED_SHAPES.get(facing);
     }
 
     @Override
@@ -233,7 +224,8 @@ public class DrumBlock extends Block implements Fallable, EntityBlock {
             return Shapes.empty();
         }
 
-        return state.getValue(OPEN) ? OPEN_SHAPE : CLOSED_SHAPE;
+        Direction facing = state.getValue(FACING);
+        return state.getValue(OPEN) ? OPEN_SHAPES.get(facing) : CLOSED_SHAPES.get(facing);
     }
 
     @Override

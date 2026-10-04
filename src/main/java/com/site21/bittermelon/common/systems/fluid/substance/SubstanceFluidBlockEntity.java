@@ -27,6 +27,13 @@ import static net.minecraft.world.level.block.Block.UPDATE_ALL;
 import static net.minecraft.world.level.block.Block.UPDATE_CLIENTS;
 
 public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwner {
+    private static final Direction[] FALLBACK_DIRECTIONS = new Direction[]{
+            Direction.UP,
+            Direction.NORTH,
+            Direction.SOUTH,
+            Direction.EAST,
+            Direction.WEST
+    };
     private SubstanceMixture mixture;
     private final Runnable mixtureChangedCallback = () -> {
         setChanged();
@@ -66,30 +73,34 @@ public class SubstanceFluidBlockEntity extends BlockEntity implements MixtureOwn
     }
 
     private void displace(Level level, BlockPos pos) {
-        SubstanceFluid fluid = SUBSTANCE_FLUID.get();
         BlockPos.MutableBlockPos currentPos = new BlockPos.MutableBlockPos();
-        List<BlockPos> neighborPositions = new ArrayList<>(4);
+
+        List<BlockPos> targets = new ArrayList<>(4);
         for (Direction direction : Direction.Plane.HORIZONTAL) {
             currentPos.setWithOffset(pos, direction);
-            if (fluid.canSpreadTo(level, currentPos)) {
-                neighborPositions.add(currentPos.immutable());
+            if (level.getBlockState(currentPos).canBeReplaced()
+                    && level.getBlockEntity(currentPos) instanceof SubstanceFluidBlockEntity be
+                    && be.getVolume() < SubstanceFluid.FULL_BLOCK_VOLUME) {
+                targets.add(currentPos.immutable());
             }
         }
 
-        if (neighborPositions.isEmpty()) {
-            currentPos.setWithOffset(pos, Direction.UP);
-            if (level.getBlockState(currentPos).canBeReplaced()) {
-                neighborPositions.add(currentPos.immutable());
+        if (targets.isEmpty()) {
+            for (Direction direction : FALLBACK_DIRECTIONS) {
+                currentPos.setWithOffset(pos, direction);
+                if (level.getBlockState(currentPos).canBeReplaced()) {
+                    targets.add(currentPos.immutable());
+                }
             }
         }
 
-        if (neighborPositions.isEmpty()) return;
+        if (targets.isEmpty()) return;
 
-        List<SubstanceStack> substances = mixture.splitSubstances(neighborPositions.size(), 1);
+        List<SubstanceStack> substances = mixture.splitSubstances(targets.size(), 1);
         if (substances.isEmpty()) return;
 
-        for (BlockPos neighborPos : neighborPositions) {
-            SUBSTANCE_FLUID.get().spreadTo(level, neighborPos, substances);
+        for (BlockPos target : targets) {
+            SUBSTANCE_FLUID.get().spreadTo(level, target, substances);
         }
     }
 

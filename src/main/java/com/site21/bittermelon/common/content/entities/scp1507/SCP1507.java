@@ -48,6 +48,7 @@ import net.tslat.smartbrainlib.api.SmartBrainOwner;
 import net.tslat.smartbrainlib.api.core.ActivityBuilder;
 import net.tslat.smartbrainlib.api.core.behaviour.base.FirstApplicableBehaviour;
 import net.tslat.smartbrainlib.api.core.behaviour.base.OneRandomBehaviour;
+import net.tslat.smartbrainlib.api.core.behaviour.custom.attack.AnimatableMeleeAttack;
 import net.tslat.smartbrainlib.api.core.behaviour.custom.attack.LeapAtTarget;
 import net.tslat.smartbrainlib.api.core.behaviour.custom.look.LookAtTarget;
 import net.tslat.smartbrainlib.api.core.behaviour.custom.misc.Idle;
@@ -185,10 +186,8 @@ public class SCP1507 extends BitterMob<SCP1507> implements SmartBrainOwner<SCP15
                 new SetWalkTargetToAttackTarget<>(),
                 new OneRandomBehaviour<>(
                         ObjectIntPair.of(
-                                new LeapAtTarget<SCP1507>(0)
+                                new AnimatableMeleeAttack<SCP1507>(5)
                                         .whenStarting(SCP1507::resetAttackTime)
-                                        .startCondition((entity) ->
-                                                BrainUtil.getTargetOfEntity(entity).distanceTo(entity) < 4)
                                         .whenStopping(SCP1507::attemptEmbedLeg),
                                 10
                         ),

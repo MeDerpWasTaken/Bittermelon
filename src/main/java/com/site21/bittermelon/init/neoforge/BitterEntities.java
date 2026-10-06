@@ -78,7 +78,7 @@ public class BitterEntities {
 
     public static final DeferredHolder<EntityType<?>, EntityType<SCP1507>> SCP_1507 = ENTITY_TYPES.register("scp_1507",
             () -> EntityType.Builder.of(SCP1507::new, MobCategory.MONSTER)
-                    .sized(0.5f, 0.7f)
+                    .sized(0.5f, 0.8f)
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Bittermelon.MOD_ID, "scp_1507"))));
 
     public static final DeferredHolder<EntityType<?>, EntityType<SCP548>> SCP_548 = ENTITY_TYPES.register("scp_548",

@@ -59,6 +59,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class SCP939 extends BitterMob<SCP939> {
@@ -170,7 +171,7 @@ public class SCP939 extends BitterMob<SCP939> {
                         new AnimatableMeleeAttack<>(10),
                         new LeapAtTarget<>(10)
                                 .jumpStrength(1.2f)
-                                .canAttack((entity, target) -> entity.distanceToSqr(target) > 3.0),
+                                .startCondition((entity) -> entity.distanceToSqr(Objects.requireNonNull(BrainUtil.getTargetOfEntity(entity))) > 3.0),
                         new YankItem<>(0),
                         new Pull<>(0)
                                 .cooldownFor(40, 60)

@@ -186,9 +186,16 @@ public class SCP1507 extends BitterMob<SCP1507> implements SmartBrainOwner<SCP15
                 new SetWalkTargetToAttackTarget<>(),
                 new OneRandomBehaviour<>(
                         ObjectIntPair.of(
-                                new AnimatableMeleeAttack<SCP1507>(5)
-                                        .whenStarting(SCP1507::resetAttackTime)
-                                        .whenStopping(SCP1507::attemptEmbedLeg),
+                                new FirstApplicableBehaviour<>(
+                                        new AnimatableMeleeAttack<SCP1507>(5)
+                                                .whenStarting(SCP1507::resetAttackTime)
+                                                .whenStopping(SCP1507::attemptEmbedLeg),
+                                        new LeapAtTarget<SCP1507>(10)
+                                                .whenStarting(SCP1507::resetAttackTime)
+                                                .whenStopping(SCP1507::attemptEmbedLeg)
+                                                .jumpStrength(1.2f)
+                                                .startCondition((entity) -> entity.distanceToSqr(Objects.requireNonNull(BrainUtil.getTargetOfEntity(entity))) > 2.0)
+                                ),
                                 10
                         ),
                         ObjectIntPair.of(

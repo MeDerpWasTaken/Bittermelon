@@ -45,7 +45,7 @@ public record Reaction(
     }
 
     public int getReactionRate(SubstanceContainer substanceContainer, Level level, BlockPos pos) {
-        return 100;
+        return 1;
     }
 
     public boolean react(SubstanceContainer substanceContainer, Level level, BlockPos pos) {

@@ -3,6 +3,8 @@ package com.site21.bittermelon.init.custom;
 import com.site21.bittermelon.Bittermelon;
 import com.site21.bittermelon.common.systems.substance.Nature;
 import com.site21.bittermelon.common.systems.substance.Substance;
+import com.site21.bittermelon.init.neoforge.BitterMobEffects;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -154,6 +156,7 @@ public class Substances {
             "Eyeball Fluid",
             new Substance.Properties()
                     .color(0x55FFFFFF)
+                    .contactEffects(new MobEffectInstance(BitterMobEffects.EYEBALL_GROWTH, MobEffectInstance.INFINITE_DURATION, 0, true, false))
     ));
 }
 

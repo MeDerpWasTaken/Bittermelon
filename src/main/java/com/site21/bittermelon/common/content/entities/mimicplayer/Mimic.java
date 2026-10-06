@@ -150,7 +150,7 @@ public class Mimic extends BitterMob<Mimic> {
 
         Player player = getPlayer();
         if (player != null) {
-            if (player.getData(RAGE) < 50 || (player instanceof ServerPlayer sPlayer && sPlayer.getCamera() != this)) {
+            if (player.getData(RAGE) < 50 || (player instanceof ServerPlayer serverPlayer && serverPlayer.getCamera() != this)) {
                 discard();
             }
         }

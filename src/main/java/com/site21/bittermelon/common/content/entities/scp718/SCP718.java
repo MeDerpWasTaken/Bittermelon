@@ -125,17 +125,15 @@ public class SCP718 extends PathfinderMob implements SmartBrainOwner<SCP718> {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    if (dx == 0 && dy == 0 && dz == 0) {
-                        continue;
-                    }
+                    if (dx == 0 && dy == 0 && dz == 0) continue;
 
                     FluidProjectile projectile = new FluidProjectile(level, substanceMixture);
                     projectile.setPos(x, y, z);
 
                     double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    float vx = (float) (dx / len);
-                    float vy = (float) (dy / len);
-                    float vz = (float) (dz / len);
+                    double vx = dx / len;
+                    double vy = dy / len;
+                    double vz = dz / len;
 
                     projectile.shoot(vx, vy, vz, speed, inaccuracy);
                     level.addFreshEntity(projectile);

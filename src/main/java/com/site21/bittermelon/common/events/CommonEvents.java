@@ -111,15 +111,6 @@ public class CommonEvents {
         }
     }
 
-    @SubscribeEvent
-    public static void onLevelTick(LevelTickEvent.Post event) {
-        if (event.getLevel() instanceof ServerLevel serverLevel) {
-            if (serverLevel.tickRateManager().runsNormally()) {
-                PhysicsManager.updatePhysicsLevel(event.getLevel());
-            }
-        }
-    }
-
     private static void tickCharacter(LivingEntity entity, Character character) {
         SkillUpdater.tickSkills(entity, character);
     }
@@ -158,6 +149,15 @@ public class CommonEvents {
                     level.playSound(null, pos, SoundEvents.POINTED_DRIPSTONE_DRIP_WATER,
                             SoundSource.AMBIENT, 1.0f, 0.8f + level.getRandom().nextFloat() * 0.4f);
                 }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelTick(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            if (serverLevel.tickRateManager().runsNormally()) {
+                PhysicsManager.updatePhysicsLevel(event.getLevel());
             }
         }
     }
